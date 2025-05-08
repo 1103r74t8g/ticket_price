@@ -2,8 +2,8 @@ name: Ticket Price Monitor
 
 on:
   schedule:
-    - cron: "0 * * * *"  # 每小時執行一次
-  workflow_dispatch:  # 手動觸發
+    - cron: "0 */2 * * *" 
+  workflow_dispatch:  
 
 jobs:
   monitor:
