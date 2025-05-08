@@ -1,18 +1,24 @@
+import os
 import requests
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+
+# 載入環境變數
+load_dotenv()
 
 # 配置參數
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-EMAIL_ADDRESS = "willy110439@gmail.com"  # 替換為你的 Gmail
-EMAIL_PASSWORD = "trcs tnqm nlsi hmkd"  # 替換為你的應用程式密碼
-TO_EMAIL = "willy110439@gmail.com"  # 替換為收件人 Email
+EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")  # 從環境變數讀取
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")  # 從環境變數讀取
+TO_EMAIL = "willy110439@gmail.com" # 收件人電子郵件地址
 
 # 定義網站的 URL
 URL = "https://gametime.co/concert/ado-tickets/7-29-2025-baltimore-md-cfg-bank-arena/events/671b084afb59e4425bdc20c0"
+
 
 def get_ticket_price(url):
     """
