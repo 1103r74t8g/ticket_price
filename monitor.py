@@ -16,9 +16,10 @@ EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")  # 從環境變數讀取
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")  # 從環境變數讀取
 TO_EMAIL = "willy110439@gmail.com" # 收件人電子郵件地址
 
-# 定義網站的 URL
+# 目標網站的 URL
 URL = "https://gametime.co/concert/ado-tickets/7-29-2025-baltimore-md-cfg-bank-arena/events/671b084afb59e4425bdc20c0"
 
+LOWEST_PRICE_FILE = "lowest_price.txt"
 
 def get_ticket_price(url):
     """
@@ -62,6 +63,27 @@ def send_email(subject, body):
     except Exception as e:
         print(f"發送電子郵件時發生錯誤：{e}")
 
+def get_lowest_price():
+    """
+    從檔案中讀取最低價格
+    """
+    if os.path.exists(LOWEST_PRICE_FILE):
+        with open(LOWEST_PRICE_FILE, "r") as file:
+            try:
+                return float(file.read().strip())
+            except ValueError:
+                return None
+    return None
+
+
+def save_lowest_price(price):
+    """
+    將最低價格儲存到檔案
+    """
+    with open(LOWEST_PRICE_FILE, "w") as file:
+        file.write(str(price))
+
+
 if __name__ == "__main__":
     try:
         # 抓取網站的票價
@@ -69,10 +91,17 @@ if __name__ == "__main__":
         if price is not None:
             print(f"網站的票價為：${price}")
 
-            # 發送電子郵件通知
-            subject = "票價通知"
-            body = f"目前網站的票價為 ${price}，請前往查看：{URL}"
-            send_email(subject, body)
+            # 讀取最低價格
+            lowest_price = get_lowest_price()
+            if lowest_price is None or price < lowest_price:
+                # 更新最低價格並發送通知
+                save_lowest_price(price)
+                print(f"發現新低價：${price}")
+                subject = "票價創新低通知"
+                body = f"目前網站的票價為 ${price}，創新低！請前往查看：{URL}"
+                send_email(subject, body)
+            else:
+                print(f"目前票價 ${price} 未低於最低價格 ${lowest_price}")
         else:
             print("抓取網站的票價失敗")
     except Exception as e:
