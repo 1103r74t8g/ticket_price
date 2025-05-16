@@ -9,20 +9,17 @@ from dotenv import load_dotenv
 import gspread
 from google.oauth2.service_account import Credentials
 
-# 載入環境變數
 load_dotenv()
 
+# Gmail 設定
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 TO_EMAIL = "willy110439@gmail.com"
 
-# 票價來源
 URL = "https://gametime.co/concert/ado-tickets/7-29-2025-baltimore-md-cfg-bank-arena/events/671b084afb59e4425bdc20c0"
 
-
-# Google Sheets 
 SPREADSHEET_NAME = "lowest_price"  
 
 def get_ticket_price(url):
@@ -67,14 +64,14 @@ def get_lowest_price(sheet):
             return None
         return float(lowest_price)
     except Exception as e:
-        print(f"讀取最低價錯誤：{e}")
+        print(f"讀取錯誤：{e}")
         return None
 
 
 def write_to_google_sheet(price):
     try:
         sheet.update("A1", [[price]])
-        print("成功寫入最低價到 Google Sheets")
+        print("成功寫入到 Google Sheets")
     except Exception as e:
         print(f"寫入 Google Sheets 錯誤：{e}")
 
@@ -83,7 +80,7 @@ if __name__ == "__main__":
         price = get_ticket_price(URL)
         if price is not None:
             print(f"目前票價：${price}")
-            
+     
             scope = [
                 "https://www.googleapis.com/auth/spreadsheets",
                 "https://www.googleapis.com/auth/drive"
@@ -94,17 +91,23 @@ if __name__ == "__main__":
             client = gspread.authorize(creds)
             sheet = client.open(SPREADSHEET_NAME).sheet1
             
-            
+            # 讀取最低價
             lowest_price = get_lowest_price(sheet)
 
             if lowest_price is None or price < lowest_price:
                 write_to_google_sheet(price)
                 print(f"📉 新低價：${price}")
-                subject = "票價創新低通知"
-                body = f"目前票價為 ${price}，創新低！\n網址：{URL}"
+                subject = "票價下跌通知"
+                body = f"目前票價為 ${price}。\n網址：{URL}"
+                send_email(subject, body)
+            elif price > lowest_price:
+                write_to_google_sheet(price)
+                print(f"📈 票價上漲 ${price}")
+                subject = "票價上漲通知"
+                body = f"目前票價為 ${price}。\n網址：{URL}"
                 send_email(subject, body)
             else:
-                print(f"未低於最低價 ${lowest_price}")
+                print(f"價格持平 ${lowest_price}")
         else:
             print("❌ 抓取票價失敗")
     except Exception as e:
